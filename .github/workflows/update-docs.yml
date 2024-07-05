@@ -13,32 +13,32 @@ jobs:
     - name: Checkout repository content
       uses: actions/checkout@v3
 
-    - name: Copy .doc files to GitHub Pages
-      run: |
-        mkdir -p public/rice-object
-        find . -name '*.doc' -exec cp {} public/rice-object/ \;
-
     - name: Create a new post
       run: |
-        mkdir -p public/_posts
+        mkdir -p doc/_posts
         COMMIT_HASH=$(git rev-parse HEAD)
         COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')
         COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
-        COMMIT_DATE=$(date -u)
-        POST_FILENAME="public/_posts/$(date +%Y-%m-%d)-update.md"
+        COMMIT_DATE=$(git log -1 --pretty=format:'%ci' | cut -d ' ' -f1)
+        POST_DATE=$(date -u +'%Y-%m-%d')
+        POST_TITLE=$(echo $COMMIT_MESSAGE | sed 's/ /-/g' | tr '[:upper:]' '[:lower:]')
+        POST_FILENAME="doc/_posts/${POST_DATE}-${POST_TITLE}.markdown"
         echo "---" > $POST_FILENAME
-        echo "title: Update on $(date +'%Y-%m-%d %H:%M:%S %Z')" >> $POST_FILENAME
+        echo "title: \"$COMMIT_MESSAGE\"" >> $POST_FILENAME
+        echo "date: \"$COMMIT_DATE\"" >> $POST_FILENAME
         echo "author: $COMMIT_AUTHOR" >> $POST_FILENAME
-        echo "date: $COMMIT_DATE" >> $POST_FILENAME
+        echo "version: 1.0.0" >> $POST_FILENAME  # Adjust version as needed
+        echo "category: release" >> $POST_FILENAME  # Adjust category as needed
         echo "---" >> $POST_FILENAME
-        echo "Commit hash: $COMMIT_HASH" >> $POST_FILENAME
-        echo "Commit message: $COMMIT_MESSAGE" >> $POST_FILENAME
-        echo "Updated .doc files have been copied to the GitHub Pages site." >> $POST_FILENAME
-        echo "Content added or updated:" >> $POST_FILENAME
-        find . -name '*.doc' >> $POST_FILENAME
+        echo "Hey! After many months of hard work by contributors, we're excited to announce this update." >> $POST_FILENAME
+        echo "Here are the highlights:" >> $POST_FILENAME
+        echo "- Support for new feature X" >> $POST_FILENAME
+        echo "- Bug fixes and improvements" >> $POST_FILENAME
+        echo "" >> $POST_FILENAME
+        echo "Check out the [full release notes](https://github.com/your/repository/commits/$COMMIT_HASH) for details." >> $POST_FILENAME
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        publish_dir: ./doc
