@@ -1,0 +1,44 @@
+name: Update GitHub Pages for .doc Files
+
+on:
+  push:
+    paths:
+      - '**/*.doc'
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository content
+      uses: actions/checkout@v3
+
+    - name: Copy .doc files to GitHub Pages
+      run: |
+        mkdir -p public/rice-object
+        find . -name '*.doc' -exec cp {} public/rice-object/ \;
+
+    - name: Create a new post
+      run: |
+        mkdir -p public/_posts
+        COMMIT_HASH=$(git rev-parse HEAD)
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:'%s')
+        COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')
+        COMMIT_DATE=$(date -u)
+        POST_FILENAME="public/_posts/$(date +%Y-%m-%d)-update.md"
+        echo "---" > $POST_FILENAME
+        echo "title: Update on $(date +'%Y-%m-%d %H:%M:%S %Z')" >> $POST_FILENAME
+        echo "author: $COMMIT_AUTHOR" >> $POST_FILENAME
+        echo "date: $COMMIT_DATE" >> $POST_FILENAME
+        echo "---" >> $POST_FILENAME
+        echo "Commit hash: $COMMIT_HASH" >> $POST_FILENAME
+        echo "Commit message: $COMMIT_MESSAGE" >> $POST_FILENAME
+        echo "Updated .doc files have been copied to the GitHub Pages site." >> $POST_FILENAME
+        echo "Content added or updated:" >> $POST_FILENAME
+        find . -name '*.doc' >> $POST_FILENAME
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./public
